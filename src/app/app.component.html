@@ -1,1 +1,11 @@
-<mat-slide-toggle>Toggle me!</mat-slide-toggle>
+  <app-dynamic-table
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="totalElements"
+    (pageChange)="onPageChange($event)"
+  >
+    <ng-template templateName="actions" let-row>
+      <button (click)="onEdit(row)">edit</button>
+      <button (click)="onDelete(row)">delete</button>
+    </ng-template>
+  </app-dynamic-table>
