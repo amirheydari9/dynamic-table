@@ -10,8 +10,8 @@ import {
 } from '@angular/core';
 import {CommonModule, NgTemplateOutlet} from '@angular/common';
 import {MatTable, MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatPaginator, MatPaginatorModule, PageEvent} from '@angular/material/paginator';
-import {MatSort, MatSortModule} from '@angular/material/sort';
+import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
+import {MatSort, MatSortModule, Sort} from '@angular/material/sort';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {CalculateCellValuePipe} from '../../pipes/calculate-cell-value.pipe';
 import {TemplateNameDirective} from '../../diretives/template-name.directive';
@@ -31,49 +31,50 @@ import {CellClassType, TableColumnConfigType} from '../../types';
   ],
   template: `
     <div class="mat-elevation-z8">
-      <table mat-table [dataSource]="dataSource" matSort class="full-width-table">
+      <table mat-table (matSortChange)="onPageChange()" [dataSource]="dataSource" matSort
+             class="full-width-table">
 
         <!-- Checkbox Column -->
         @if (selection) {
-          <ng-container matColumnDef="select">
-            <th mat-header-cell *matHeaderCellDef>
-              <mat-checkbox
-                (change)="masterToggle()"
-                [checked]="isAllSelected()"
-                [indeterminate]="isSomeSelected()"
-              ></mat-checkbox>
-            </th>
-            <td mat-cell *matCellDef="let row">
-              <mat-checkbox
-                (click)="$event.stopPropagation()"
-                (change)="toggleSelection(row)"
-                [checked]="isSelected(row)"
-                [disabled]="isCheckboxDisabled(row)"
-              ></mat-checkbox>
-            </td>
-          </ng-container>
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              (change)="masterToggle()"
+              [checked]="isAllSelected()"
+              [indeterminate]="isSomeSelected()"
+            ></mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox
+              (click)="$event.stopPropagation()"
+              (change)="toggleSelection(row)"
+              [checked]="isSelected(row)"
+              [disabled]="isCheckboxDisabled(row)"
+            ></mat-checkbox>
+          </td>
+        </ng-container>
         }
 
         <!-- Dynamic Columns -->
         @for (col of columns; track col.field) {
-          <ng-container [matColumnDef]="col.field">
-            <th mat-header-cell *matHeaderCellDef>
-              @if (col.sortable) {
-                <span mat-sort-header>{{ col.header }}</span>
-              } @else {
-                <span>{{ col.header }}</span>
-              }
-            </th>
-            <td mat-cell *matCellDef="let row"
-                [class]="getClass(col.cellClass, row)"
-                [style]="getStyle(col.cellStyle, row)">
-              @if (col.body) {
-                <ng-container *ngTemplateOutlet="col.body; context: { $implicit: row }"/>
-              } @else {
-                {{ row | calculateCellValue: col }}
-              }
-            </td>
-          </ng-container>
+        <ng-container [matColumnDef]="col.field">
+          <th mat-header-cell *matHeaderCellDef>
+            @if (col.sortable) {
+        <span mat-sort-header>{{ col.header }}</span>
+        } @else {
+        <span>{{ col.header }}</span>
+        }
+        </th>
+        <td mat-cell *matCellDef="let row"
+            [class]="getClass(col.cellClass, row)"
+            [style]="getStyle(col.cellStyle, row)">
+          @if (col.body) {
+        <ng-container *ngTemplateOutlet="col.body; context: { $implicit: row }"/>
+        } @else {
+        {{ row | calculateCellValue: col }}
+        }
+        </td>
+      </ng-container>
         }
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -92,10 +93,11 @@ import {CellClassType, TableColumnConfigType} from '../../types';
       </table>
 
       <mat-paginator
+        [disabled]="!data.length"
         [length]="totalRecords"
         [pageSize]="rows"
         [pageSizeOptions]="[10,20,50,100]"
-        (page)="onPageChange($event)"
+        (page)="onPageChange()"
       ></mat-paginator>
 
     </div>
@@ -153,9 +155,6 @@ export class CustomTableComponent implements AfterContentInit {
   }
 
   ngAfterContentInit() {
-    this.dataSource = new MatTableDataSource(this.data);
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
 
     this.displayedColumns = this.selection
       ? ['select', ...this.columns.map(c => c.field)]
@@ -169,12 +168,22 @@ export class CustomTableComponent implements AfterContentInit {
     }
   }
 
-  onPageChange(event: PageEvent) {
+  ngAfterViewInit() {
+
+    this.dataSource = new MatTableDataSource(this.data);
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+
+    this.onPageChange()
+
+  }
+
+  onPageChange() {
     this.pageChange.emit({
-      page: event.pageIndex,
-      size: event.pageSize,
-      sortField: this.sort.active,
-      sortOrder: this.sort.direction === 'asc' ? 1 : -1
+      page: this.paginator.pageIndex,
+      size: this.paginator.pageSize,
+      sortField: (!!this.sort.direction) ? this.sort.active : undefined,
+      sortOrder: (!!this.sort.direction) ? this.sort.direction : undefined
     });
   }
 
@@ -217,4 +226,5 @@ export class CustomTableComponent implements AfterContentInit {
     this.paginator.firstPage();
     this.selectedItems = [];
   }
+
 }
