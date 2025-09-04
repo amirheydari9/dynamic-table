@@ -11,7 +11,7 @@ import {
 import {CommonModule, NgTemplateOutlet} from '@angular/common';
 import {MatTable, MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
-import {MatSort, MatSortModule, Sort} from '@angular/material/sort';
+import {MatSort, MatSortModule} from '@angular/material/sort';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {CalculateCellValuePipe} from '../../pipes/calculate-cell-value.pipe';
 import {TemplateNameDirective} from '../../diretives/template-name.directive';
@@ -93,7 +93,7 @@ import {CellClassType, TableColumnConfigType} from '../../types';
       </table>
 
       <mat-paginator
-        [disabled]="!data.length"
+        [disabled]="!(dataSource.data.length)"
         [length]="totalRecords"
         [pageSize]="rows"
         [pageSizeOptions]="[10,20,50,100]"
@@ -115,17 +115,11 @@ export class CustomTableComponent implements AfterContentInit {
   @ViewChild(MatTable) table!: MatTable<any>;
   @ContentChildren(TemplateNameDirective) templates!: QueryList<TemplateNameDirective>;
 
-  private _data: any[] = [];
+  dataSource = new MatTableDataSource<any>([]);
+
   @Input()
   set data(value: any[]) {
-    this._data = value || [];
-    if (this.dataSource) {
-      this.dataSource.data = this._data;
-    }
-  }
-
-  get data(): any[] {
-    return this._data;
+    this.dataSource.data = value || [];
   }
 
   @Input() columns: TableColumnConfigType[] = [];
@@ -140,7 +134,6 @@ export class CustomTableComponent implements AfterContentInit {
   @Output() pageChange = new EventEmitter<any>();
   @Output() selectionChange = new EventEmitter<any[]>();
 
-  dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = [];
   private _selectedItems: any[] = [];
 
@@ -169,11 +162,8 @@ export class CustomTableComponent implements AfterContentInit {
   }
 
   ngAfterViewInit() {
-
-    this.dataSource = new MatTableDataSource(this.data);
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
-
     this.onPageChange()
 
   }
@@ -209,7 +199,7 @@ export class CustomTableComponent implements AfterContentInit {
   }
 
   isAllSelected(): boolean {
-    const selectable = this.data.filter(d => !this.isCheckboxDisabled(d));
+    const selectable = this.dataSource.data.filter(d => !this.isCheckboxDisabled(d));
     return this.selectedItems.length === selectable.length;
   }
 
@@ -218,11 +208,12 @@ export class CustomTableComponent implements AfterContentInit {
   }
 
   masterToggle(): void {
-    this.isAllSelected() ? this.selectedItems = [] : this.selectedItems = this.data.filter(d => !this.isCheckboxDisabled(d));
+    this.isAllSelected() ? this.selectedItems = [] : this.selectedItems = this.dataSource.data.filter(d => !this.isCheckboxDisabled(d));
   }
 
+  //TODO
   reload(): void {
-    this.dataSource.data = this.data;
+    this.dataSource.data = [];
     this.paginator.firstPage();
     this.selectedItems = [];
   }
