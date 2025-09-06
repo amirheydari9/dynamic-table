@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {Component, effect, inject, signal} from '@angular/core';
 import {CustomTableComponent} from './dynamic-table/components/table/table.component';
 import {TableColumnConfigType} from './dynamic-table/types';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
@@ -24,34 +24,37 @@ export class AppComponent {
     {header: 'نام کامل', field: 'fullName', cellValue: (row) => row.firstName + ' ' + row.lastName},
     {header: 'نام', field: 'firstName', sortable: true},
     {header: 'نام خانوادگی', field: 'lastName'},
-    {header: 'آدرس', field: 'address'},
+    {header: 'ایمیل', field: 'email'},
     {
       header: 'جنیست',
       field: 'gender',
       // cellStyle: (row) => ({'color': row.gender === GENDER.FEMALE ? 'red' : 'green'})
     },
-    {header: 'تاریخ', field: 'createdDate', cellStyle: {'font-size': '20px'}},
+    {header: 'نام کاربری', field: 'username', cellStyle: {'font-size': '20px'}},
     {header: 'تاریخ تولد', field: 'birthDate'},
     {
-      header: 'محل لولد', field: 'birthPlaceId',
+      header: 'سن', field: 'age',
       pipes: [{name: 'decimal'}],
-      cellStyle: (row) => ({'color': row.birthPlaceId > 10000 ? 'red' : 'green'}),
-      cellClass: (row) => (row.birthPlaceId > 10000 ? 'green' : 'red'),
+      cellStyle: (row) => ({'color': row.age > 30 ? 'red' : 'green'}),
+      cellClass: (row) => (row.age > 10000 ? 'green' : 'red'),
     },
     {header: 'علیات', field: 'actions'},
   ];
 
   ngOnInit() {
-    const headers = new HttpHeaders()
-      .set('Authorization', 'Bearer ' + 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGhvcml0eSI6IlJPTEVfYWRtaW4iLCJpc3MiOiJIYW1yYWggTG90dXMiLCJleHAiOjE3NTY5Mjc4NDgsInVzZXJJZCI6MSwiaWF0IjoxNzU2ODg0NjQ4fQ.VeOOaXHX-kUfnQtv2va1hDp9On3mXoERKgvqpgc0SVNja6ugO3zQ03UyGL5elRwc1PFIzS-gX6ao0oyJRI1q-A')
-    return this.http.post(`https://sand.vee.ir/api/report/end-users/get-all`, {}, {headers}).subscribe(data => {
-      this.data = data['body'].content
-      this.totalElements = data['body'].totalElements
+   this.fetchData()
+  }
+
+  fetchData(data?){
+    return this.http.post(`https://dummyjson.com/users/?limit=${data?.size}&skip=${data?.page}`, {}).subscribe(data => {
+      this.data = data['users']
+      this.totalElements = data['total']
     })
   }
 
   onPageChange($event: any) {
     console.log($event)
+    this.fetchData($event)
   }
 
   onEdit(row: any) {
@@ -60,5 +63,11 @@ export class AppComponent {
 
   onDelete(row: any) {
     console.log(row)
+  }
+
+  protected readonly onselectionchange = onselectionchange;
+
+  onSelectionchange($event: any[]) {
+    console.log($event)
   }
 }

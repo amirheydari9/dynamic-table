@@ -1,11 +1,14 @@
-  <app-dynamic-table
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalElements"
-    (pageChange)="onPageChange($event)"
-  >
-    <ng-template templateName="actions" let-row>
-      <button (click)="onEdit(row)">edit</button>
-      <button (click)="onDelete(row)">delete</button>
-    </ng-template>
-  </app-dynamic-table>
+<app-dynamic-table
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="totalElements"
+  [selection]="true"
+  (pageChange)="onPageChange($event)"
+  (selectionChange)="onSelectionchange($event)"
+>
+  <ng-template templateName="actions" let-row>
+    <button (click)="onEdit(row)">edit</button>
+    <button (click)="onDelete(row)">delete</button>
+  </ng-template>
+</app-dynamic-table>
+
